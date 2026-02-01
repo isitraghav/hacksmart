@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HackSmart Partners & Navigation</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .header h1 span {
+      background: linear-gradient(90deg, #00d9ff, #00ff88);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #00d9ff;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      display: flex;
+      height: calc(100vh - 70px);
+    }
+
+    .sidebar {
+      width: 350px;
+      background: rgba(255, 255, 255, 0.03);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 1rem;
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    .tab-btn.active {
+      color: #00d9ff;
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: #00d9ff;
+    }
+
+    .tab-content {
+      padding: 1rem;
+      overflow-y: auto;
+      flex: 1;
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .filter-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-section h3 {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+
+    .input-group label {
+      display: block;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .coords-input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .input-style {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #fff;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .input-style:focus {
+      border-color: #00d9ff;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.875rem;
+      background: linear-gradient(135deg, #00d9ff 0%, #00ff88 100%);
+      color: #1a1a2e;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .filter-btn {
+      flex: 1;
+      padding: 0.6rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+
+    .filter-btn.active {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: #00d9ff;
+      color: #00d9ff;
+    }
+
+    .partner-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .partner-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .partner-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(0, 217, 255, 0.5);
+    }
+
+    .partner-card.active {
+      border-color: #00d9ff;
+      background: rgba(0, 217, 255, 0.05);
+    }
+
+    .partner-id {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .partner-coords {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.75rem;
+    }
+
+    .partner-status {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+
+    .partner-status.active {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00ff88;
+    }
+
+    .partner-status.inactive {
+      background: rgba(255, 87, 87, 0.2);
+      color: #ff5757;
+    }
+
+    #map {
+      flex: 1;
+      background: #0f0f1a;
+      cursor: crosshair;
+    }
+
+    .instructions {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .instructions em {
+      color: #00d9ff;
+      font-style: normal;
+    }
+
+    .route-info {
+      background: rgba(0, 217, 255, 0.1);
+      border: 1px solid #00d9ff;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .route-info.visible {
+      display: block;
+    }
+
+    .route-steps {
+      list-style: none;
+      margin-top: 0.5rem;
+    }
+
+    .route-steps li {
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+      padding-left: 1rem;
+      position: relative;
+    }
+
+    .route-steps li::before {
+      content: '•';
+      color: #00d9ff;
+      position: absolute;
+      left: 0;
+    }
+
+    /* Popup Styling */
+    .leaflet-popup-content-wrapper {
+      background: rgba(26, 26, 46, 0.95);
+      color: #fff;
+      border-radius: 8px;
+      padding: 0;
+    }
+
+    .leaflet-popup-content {
+      margin: 12px;
+      line-height: 1.5;
+    }
+
+    .popup-header {
+      color: #00d9ff;
+      font-weight: 700;
+      margin-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 4px;
+    }
+
+    .popup-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+
+    .popup-val {
+      font-weight: 600;
+    }
+
+    .warehouse-popup .popup-header {
+      color: #ffb700;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <h1>🗺️ <span>HackSmart</span> Partners & Nav</h1>
+    <div class="stats-bar">
+      <div class="stat-item" style="cursor: pointer" onclick="switchTab('agent')">
+        <div class="stat-value" id="alertCount" style="color:#ff5757">0</div>
+        <div class="stat-label">Alerts</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="totalCount">-</div>
+        <div class="stat-label">Partners</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="activeCount">-</div>
+        <div class="stat-label">Active</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="warehouseCount">-</div>
+        <div class="stat-label">Warehouses</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('partners')">Partners</button>
+        <button class="tab-btn" onclick="switchTab('navigation')">Navigation</button>
+        <button class="tab-btn" onclick="switchTab('agent')">AI Agent</button>
+      </div>
+
+      <!-- Partners Tab -->
+      <div id="partners" class="tab-content active">
+        <div class="input-group">
+          <input type="text" id="searchInput" class="input-style" placeholder="Search partners..." />
+        </div>
+
+        <div class="filter-section">
+          <h3>Status</h3>
+          <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="active">Active</button>
+            <button class="filter-btn" data-filter="inactive">Inactive</button>
+          </div>
+
+        </div>
+
+        <div class="partner-list" id="partnerList">
+          <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 2rem;">Loading...</div>
+        </div>
+      </div>
+      <!-- End Partners Tab -->
+
+      <!-- LOGISTICS COMMAND CENTER -->
+      <div id="agent" class="tab-content" style="display:none; padding: 1.5rem;">
+        <div
+          style="margin-bottom: 2rem; border-bottom:1px solid #333; padding-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2 style="margin:0; font-size:1.8rem;">📦 Logistics Command Center</h2>
+            <p style="color:#888; margin:0.5rem 0 0 0;">Autonomous Detection & Resolution Protocol</p>
+          </div>
+          <div style="display:flex; gap:1rem;">
+            <button onclick="simulateSpike()" class="btn"
+              style="background:#ff005533; border:1px solid #ff0055; color:#ff0055;">🧪 Test: Simulate
+              Spike</button>
+            <button onclick="scanForDeficits()" class="btn"
+              style="background:#00d9ff33; border:1px solid #00d9ff; color:#00d9ff;">📡 Scan & Ticket</button>
+            <button onclick="resolveTickets()" class="btn"
+              style="background:#00ff8833; border:1px solid #00ff88; color:#00ff88;">🤖 Auto-Resolve (AI)</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; height: 600px;">
+
+          <!-- LEFT: TICKET BOARD -->
+          <div class="glass-panel" style="padding: 1rem; display:flex; flex-direction:column;">
+            <h3 style="color:#ffb700; border-bottom:1px solid #333; padding-bottom:0.5rem; margin-top:0;">
+              🎫 Open Tickets <span id="ticketCount"
+                style="font-size:0.8em; background:#333; padding:2px 8px; border-radius:4px; margin-left:8px;">0</span>
+            </h3>
+            <div id="ticketList" style="flex:1; overflow-y:auto; padding-right:0.5rem;">
+              <!-- Tickets injected here -->
+              <div style="color:#666; text-align:center; padding:2rem;">No open tickets. Network execution optimal.
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: TASK QUEUE -->
+          <div class="glass-panel" style="padding: 1rem; display:flex; flex-direction:column;">
+            <h3 style="color:#00d9ff; border-bottom:1px solid #333; padding-bottom:0.5rem; margin-top:0;">
+              🚚 Active Tasks <span id="taskCount"
+                style="font-size:0.8em; background:#333; padding:2px 8px; border-radius:4px; margin-left:8px;">0</span>
+            </h3>
+            <div id="taskList" style="flex:1; overflow-y:auto; padding-right:0.5rem;">
+              <!-- Tasks injected here -->
+              <div style="color:#666; text-align:center; padding:2rem;">No active transit tasks.</div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
+        <!-- Navigation Tab -->
+        <div id="navigation" class="tab-content" style="display:none; padding: 1.5rem;">
+          <div class="instructions">
+            Click map to set <em>Start</em> and <em>End</em> points
+          </div>
+
+          <div class="input-group">
+            <label>Start Location</label>
+            <div class="coords-input-row">
+              <input type="number" id="startLat" class="input-style" step="any" placeholder="Lat" />
+              <input type="number" id="startLon" class="input-style" step="any" placeholder="Lon" />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>End Location</label>
+            <div class="coords-input-row">
+              <input type="number" id="endLat" class="input-style" step="any" placeholder="Lat" />
+              <input type="number" id="endLon" class="input-style" step="any" placeholder="Lon" />
+            </div>
+          </div>
+
+          <button class="btn" onclick="getRoute()">Get Route</button>
+          <button class="btn btn-secondary" onclick="clearRoute()">Clear Route</button>
+
+          <div id="routeInfo" class="route-info">
+            <h3>Route Details</h3>
+            <p>Distance: <span id="routeDist">-</span> km</p>
+            <p>Battery Swaps: <span id="routeSwaps">-</span></p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.8;">Active stations used:</p>
+            <ul id="stationList" class="route-steps"></ul>
+          </div>
+        </div>
+    </aside>
+
+    <div id="map"></div>
+  </div>
+
+  <script>
+    // --- Map Setup ---
+    const map = L.map('map').setView([26.85, 80.9], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap, © CARTO',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // --- State ---
+    let allPartners = [];
+    let allWarehouses = [];
+    let markers = {};
+    let warehouseMarkers = [];
+    let currentFilter = 'all';
+    let searchTerm = '';
+
+    let routeLayer = null;
+    let startMarker = null;
+    let endMarker = null;
+    let clickMode = 'start';
+
+    // --- Icons ---
+    const Icons = {
+      active: L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="width:10px;height:10px;background:#00ff88;border-radius:50%;box-shadow:0 0 10px #00ff88;"></div>',
+        iconSize: [10, 10], iconAnchor: [5, 5]
+      }),
+      inactive: L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="width:8px;height:8px;background:#ff5757;border-radius:50%;opacity:0.6;"></div>',
+        iconSize: [8, 8], iconAnchor: [4, 4]
+      }),
+      warehouse: L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="width:14px;height:14px;background:#ffb700;border: 2px solid #fff; border-radius:3px;box-shadow:0 0 10px #ffb700;"></div>',
+        iconSize: [14, 14], iconAnchor: [7, 7]
+      }),
+      start: L.divIcon({
+        html: '<div style="font-size:24px;">🚩</div>',
+        iconSize: [24, 24], iconAnchor: [2, 22]
+      }),
+      end: L.divIcon({
+        html: '<div style="font-size:24px;">🏁</div>',
+        iconSize: [24, 24], iconAnchor: [2, 22]
+      }),
+      swap: L.divIcon({
+        html: '<div style="font-size:20px;">🔋</div>',
+        iconSize: [20, 20], iconAnchor: [10, 10]
+      })
+    };
+
+    // --- Tab Switching ---
+    window.switchTab = (tabId) => {
+      document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.remove('active');
+        el.style.display = 'none'; // Ensure hidden
+      });
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+      const activeTab = document.getElementById(tabId);
+      activeTab.classList.add('active');
+      activeTab.style.display = 'block'; // Force show
+
+      document.querySelector(`button[onclick="switchTab(\'${tabId}\')"]`).classList.add('active');
+    };
+
+    // --- Data Loading ---
+    async function loadData() {
+      await Promise.all([loadPartners(), loadWarehouses()]);
+    }
+
+    async function loadPartners() {
+      try {
+        const res = await fetch('/api/partners');
+        const json = await res.json();
+        allPartners = json.data;
+        updateStats();
+        renderList();
+        renderMarkers();
+      } catch (e) { console.error(e); }
+    }
+
+    async function loadWarehouses() {
+      try {
+        const res = await fetch('/api/warehouses');
+        const json = await res.json();
+        allWarehouses = json.data;
+        document.getElementById('warehouseCount').innerText = allWarehouses.length;
+        renderWarehouseMarkers();
+      } catch (e) { console.error(e); }
+    }
+
+    function updateStats() {
+      const active = allPartners.filter(p => p.is_active_dsk).length;
+      if (document.getElementById('totalCount')) document.getElementById('totalCount').innerText = allPartners.length;
+      if (document.getElementById('activeCount')) document.getElementById('activeCount').innerText = active;
+      if (document.getElementById('inactiveCount')) document.getElementById('inactiveCount').innerText = allPartners.length - active;
+    }
+
+    function renderList() {
+      const list = document.getElementById('partnerList');
+      const filtered = allPartners.filter(p => {
+        const statusMatch = currentFilter === 'all' ||
+          (currentFilter === 'active' && p.is_active_dsk) ||
+          (currentFilter === 'inactive' && !p.is_active_dsk);
+        const searchMatch = p.id.toLowerCase().includes(searchTerm.toLowerCase());
+        return statusMatch && searchMatch;
+      });
+
+      list.innerHTML = filtered.slice(0, 50).map(p => `
+        <div class="partner-card" onclick="panTo('${p.id}')">
+          <div class="partner-id">${p.id}</div>
+          <div class="partner-coords">${parseFloat(p.latitude).toFixed(4)}, ${parseFloat(p.longitude).toFixed(4)}</div>
+          <span class="partner-status ${p.is_active_dsk ? 'active' : 'inactive'}">
+            ${p.is_active_dsk ? 'Active' : 'Inactive'}
+          </span>
+          <div style="font-size:0.75rem; color:grey; margin-top:0.25rem;">
+            🔋 ${p.fully_charged_batteries}/${p.total_batteries} Charged
+          </div>
+        </div>
+      `).join('') + (filtered.length > 50 ? '<div style="text-align:center;padding:1rem;color:grey;font-size:0.8rem">Showing first 50 results...</div>' : '');
+    }
+
+    function renderMarkers() {
+      Object.values(markers).forEach(m => map.removeLayer(m));
+      markers = {};
+
+      allPartners.forEach(p => {
+        if (!p.latitude || !p.longitude) return;
+        if (currentFilter === 'active' && !p.is_active_dsk) return;
+        if (currentFilter === 'inactive' && p.is_active_dsk) return;
+
+        const m = L.marker([p.latitude, p.longitude], {
+          icon: p.is_active_dsk ? Icons.active : Icons.inactive
+        }).bindPopup(`
+          <div class="popup-content">
+            <div class="popup-header">PARTNER: ${p.id}</div>
+            <div class="popup-row"><span>Status:</span> <span class="popup-val" style="color:${p.is_active_dsk ? '#00ff88' : '#ff5757'}">${p.is_active_dsk ? 'Active' : 'Inactive'}</span></div>
+            <div class="popup-row"><span>Total Batt:</span> <span class="popup-val">${p.total_batteries}</span></div>
+            <div class="popup-row"><span>Fully Charged:</span> <span class="popup-val" style="color:#00ff88">${p.fully_charged_batteries}</span></div>
+            <div class="popup-row"><span>Location:</span> <span class="popup-val">${parseFloat(p.latitude).toFixed(4)}, ${parseFloat(p.longitude).toFixed(4)}</span></div>
+          </div>
+        `);
+        m.addTo(map);
+        markers[p.id] = m;
+      });
+    }
+
+    function renderWarehouseMarkers() {
+      warehouseMarkers.forEach(m => map.removeLayer(m));
+      warehouseMarkers = [];
+
+      allWarehouses.forEach(w => {
+        const m = L.marker([w.latitude, w.longitude], { icon: Icons.warehouse })
+          .bindPopup(`
+                <div class="popup-content warehouse-popup">
+                    <div class="popup-header">🏢 ${w.name}</div>
+                    <div class="popup-row"><span>Total Charged:</span> <span class="popup-val" style="color:#00ff88">${w.charged_batteries}</span></div>
+                     <div class="popup-row"><span>Uncharged:</span> <span class="popup-val" style="color:#ff5757">${w.uncharged_batteries}</span></div>
+                    <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:4px 0;">
+                    <div class="popup-row"><span>45W Batteries:</span> <span class="popup-val">${w.batteries_45w}</span></div>
+                    <div class="popup-row"><span>110W Batteries:</span> <span class="popup-val">${w.batteries_110w}</span></div>
+                    <div class="popup-row"><span>Toolkits:</span> <span class="popup-val">${w.toolkits}</span></div>
+                </div>
+            `);
+        m.addTo(map);
+        warehouseMarkers.push(m);
+      });
+    }
+
+    window.panTo = (id) => {
+      const m = markers[id];
+      if (m) {
+        map.setView(m.getLatLng(), 15);
+        m.openPopup();
+      }
+    };
+
+    // --- Search & Filter Listeners ---
+    document.getElementById('searchInput').addEventListener('input', e => {
+      searchTerm = e.target.value;
+      renderList();
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentFilter = e.target.dataset.filter;
+        renderList();
+        renderMarkers();
+      });
+    });
+
+
+    // --- Navigation Logic ---
+    map.on('click', e => {
+      const { lat, lng } = e.latlng;
+      const sLat = document.getElementById('startLat').value;
+
+      if (!sLat || clickMode === 'start') {
+        setStart(lat, lng);
+        clickMode = 'end';
+      } else {
+        setEnd(lat, lng);
+        clickMode = 'start';
+      }
+    });
+
+    function setStart(lat, lng) {
+      document.getElementById('startLat').value = lat.toFixed(5);
+      document.getElementById('startLon').value = lng.toFixed(5);
+      if (startMarker) map.removeLayer(startMarker);
+      startMarker = L.marker([lat, lng], { draggable: true, icon: Icons.start }).addTo(map);
+      startMarker.on('dragend', e => {
+        const pos = e.target.getLatLng();
+        document.getElementById('startLat').value = pos.lat.toFixed(5);
+        document.getElementById('startLon').value = pos.lng.toFixed(5);
+      });
+    }
+
+    function setEnd(lat, lng) {
+      document.getElementById('endLat').value = lat.toFixed(5);
+      document.getElementById('endLon').value = lng.toFixed(5);
+      if (endMarker) map.removeLayer(endMarker);
+      endMarker = L.marker([lat, lng], { draggable: true, icon: Icons.end }).addTo(map);
+      endMarker.on('dragend', e => {
+        const pos = e.target.getLatLng();
+        document.getElementById('endLat').value = pos.lat.toFixed(5);
+        document.getElementById('endLon').value = pos.lng.toFixed(5);
+      });
+    }
+
+    window.clearRoute = () => {
+      if (routeLayer) map.removeLayer(routeLayer);
+      if (startMarker) map.removeLayer(startMarker);
+      if (endMarker) map.removeLayer(endMarker);
+      document.getElementById('startLat').value = '';
+      document.getElementById('startLon').value = '';
+      document.getElementById('endLat').value = '';
+      document.getElementById('endLon').value = '';
+      document.getElementById('routeInfo').classList.remove('visible');
+
+      map.eachLayer(layer => {
+        if (layer.options.icon === Icons.swap) {
+          map.removeLayer(layer);
+        }
+      });
+    };
+
+    window.getRoute = async () => {
+      const startLat = document.getElementById('startLat').value;
+      const startLon = document.getElementById('startLon').value;
+      const endLat = document.getElementById('endLat').value;
+      const endLon = document.getElementById('endLon').value;
+
+      if (!startLat || !endLat) {
+        alert("Please set both start and end locations");
+        return;
+      }
+
+      try {
+        const btn = document.querySelector('button[onclick="getRoute()"]');
+        const originalText = btn.innerText;
+        btn.innerText = "Calculating...";
+        btn.disabled = true;
+
+        const res = await fetch('/api/navigation/plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ startLat, startLon, endLat, endLon })
+        });
+
+        const json = await res.json();
+
+        if (!json.success) throw new Error(json.error);
+
+        displayRoute(json.data);
+
+        btn.innerText = originalText;
+        btn.disabled = false;
+      } catch (e) {
+        alert("Navigation failed: " + e.message);
+        document.querySelector('button[onclick="getRoute()"]').innerText = "Get Route";
+        document.querySelector('button[onclick="getRoute()"]').disabled = false;
+      }
+    };
+
+    function displayRoute(data) {
+      if (routeLayer) map.removeLayer(routeLayer);
+
+      const geometry = data.route.geometry;
+      let coords = [];
+      if (typeof geometry === 'string') {
+        coords = decodePolyline(geometry);
+      } else if (geometry.coordinates) {
+        coords = geometry.coordinates.map(c => [c[1], c[0]]);
+      }
+
+      routeLayer = L.polyline(coords, { color: '#00d9ff', weight: 4, opacity: 0.8 }).addTo(map);
+      map.fitBounds(routeLayer.getBounds().pad(0.1));
+
+      const info = document.getElementById('routeInfo');
+      info.classList.add('visible');
+      document.getElementById('routeDist').innerText = data.totalDistanceKm.toFixed(1);
+      document.getElementById('routeSwaps').innerText = data.stops.length;
+
+      const stationList = document.getElementById('stationList');
+      stationList.innerHTML = '';
+
+      data.stops.forEach((stop, i) => {
+        L.marker([stop.latitude, stop.longitude], { icon: Icons.swap })
+          .addTo(map)
+          .bindPopup(`<b>Swap Station ${i + 1}</b><br>${stop.id}`);
+
+        const li = document.createElement('li');
+        li.innerText = `Station ${stop.id}`;
+        stationList.appendChild(li);
+      });
+    }
+
+    function decodePolyline(str, precision) {
+      var index = 0, lat = 0, lng = 0, coordinates = [], shift = 0, result = 0,
+        byte = null, latitude_change, longitude_change, factor = Math.pow(10, precision || 5);
+
+      while (index < str.length) {
+        byte = null; shift = 0; result = 0;
+        do {
+          byte = str.charCodeAt(index++) - 63;
+          result |= (byte & 0x1f) << shift;
+          shift += 5;
+        } while (byte >= 0x20);
+        latitude_change = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        shift = result = 0;
+        do {
+          byte = str.charCodeAt(index++) - 63;
+          result |= (byte & 0x1f) << shift;
+          shift += 5;
+        } while (byte >= 0x20);
+        longitude_change = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        lat += latitude_change;
+        lng += longitude_change;
+        coordinates.push([lat / factor, lng / factor]);
+      }
+      return coordinates;
+    }
+
+    // --- LOGISTICS & TICKETING ---
+
+    async function loadTickets() {
+      const res = await fetch('/api/logistics/tickets');
+      const json = await res.json();
+      if (json.success) renderTickets(json.data);
+    }
+
+    async function loadTasks() {
+      const res = await fetch('/api/logistics/tasks');
+      const json = await res.json();
+      if (json.success) renderTasks(json.data);
+    }
+
+    function renderTickets(tickets) {
+      document.getElementById('ticketCount').innerText = tickets.length;
+      const list = document.getElementById('ticketList');
+      list.innerHTML = tickets.length ? '' : '<div style="color:#666; text-align:center; padding:2rem;">No open tickets.</div>';
+
+      tickets.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'partner-card';
+        div.style.borderLeft = `3px solid ${t.priority === 'CRITICAL' ? '#ff0055' : 'orange'}`;
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between;">
+                <span style="font-weight:bold; color:white;">${t.station_id}</span>
+                <span style="font-size:0.7rem; background:${t.priority === 'CRITICAL' ? '#ff0055' : '#ffb700'}; color:black; padding:2px 6px; border-radius:4px;">${t.priority}</span>
+            </div>
+            <div style="font-size:0.8rem; color:#aaa; margin-top:0.3rem;">
+                Requesting: <strong style="color:white;">${t.required_amount}</strong> units
+            </div>
+            <div style="font-size:0.7rem; color:#666; margin-top:0.3rem;">
+                Ticket #${t.id.slice(0, 6)} • ${new Date(t.created_at).toLocaleTimeString()}
+            </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function renderTasks(tasks) {
+      document.getElementById('taskCount').innerText = tasks.filter(t => t.status !== 'COMPLETED').length;
+      const list = document.getElementById('taskList');
+      list.innerHTML = tasks.length ? '' : '<div style="color:#666; text-align:center; padding:2rem;">No active tasks.</div>';
+
+      // Sort active first
+      const sorted = [...tasks].sort((a, b) => (a.status === 'COMPLETED') - (b.status === 'COMPLETED'));
+
+      sorted.forEach(task => {
+        const isCompleted = task.status === 'COMPLETED';
+        const card = document.createElement('div');
+        card.className = 'partner-card';
+        card.style.borderLeft = `3px solid ${isCompleted ? 'grey' : '#00ff88'}`;
+        card.style.opacity = isCompleted ? '0.6' : '1';
+
+        card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.25rem;">
+                <span style="font-weight:600;font-size:0.8rem; color:${isCompleted ? 'grey' : '#fff'}">#${task.id.slice(0, 8)}</span>
+                <span class="partner-status" style="background:${isCompleted ? '#333' : '#005f73'};color:${isCompleted ? '#aaa' : '#00d9ff'}">${task.status}</span>
+            </div>
+            <div style="font-size:0.85rem;color:white;margin-bottom:0.5rem;">
+                 ${task.source_type === 'WAREHOUSE' ? '🏢' : '⚡'} <strong>${task.source_id}</strong> 
+                 ➜ 
+                 ⚡ <strong>${task.target_id}</strong>
+            </div>
+            <div style="font-size:0.75rem;color:grey;display:flex;justify-content:space-between;align-items:center;">
+                <span>📦 ${task.amount} Batteries (${task.distance_km}km)</span>
+                <span>${task.financials ? '₹' + Math.floor(task.financials.profit) + ' Profit' : ''}</span>
+            </div>
+            ${!isCompleted ? `
+                <button class="btn" style="margin-top:0.5rem; padding:0.4rem; font-size:0.8rem; background: rgba(0,255,136,0.2); color:#00ff88; border:1px solid #00ff88; width:100%;" onclick="completeTask('${task.id}')">
+                    ✅ Mark Delivered
+                </button>
+            ` : ''}
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    async function completeTask(id) {
+      if (!confirm('Simulate driver delivering these batteries?')) return;
+      try {
+        await fetch(`/api/logistics/tasks/${id}/complete`, { method: 'POST' });
+        loadTasks();
+      } catch (e) {
+        alert("Error completing task: " + e.message);
+      }
+    }
+
+    async function scanForDeficits() {
+      const btn = document.querySelector('button[onclick="scanForDeficits()"]');
+      if (btn) btn.innerText = "📡 Scanning...";
+      try {
+        await fetch('/api/logistics/tickets/scan', { method: 'POST' });
+        loadTickets();
+      } catch (e) { console.error(e); }
+      if (btn) btn.innerText = "📡 Scan & Ticket";
+    }
+
+    async function resolveTickets() {
+      const btn = document.querySelector('button[onclick="resolveTickets()"]');
+      if (btn) btn.innerText = "🤖 Thinking...";
+      try {
+        await fetch('/api/logistics/run', { method: 'POST' }); // Triggers full run
+        loadTickets();
+        loadTasks();
+      } catch (e) { console.error(e); }
+      if (btn) btn.innerText = "🤖 Auto-Resolve (AI)";
+    }
+
+    async function simulateSpike() {
+      try {
+        const res = await fetch('/api/logistics/debug/spike', { method: 'POST' });
+        const json = await res.json();
+        alert(json.message);
+        loadTickets();
+      } catch (e) { alert(e.message); }
+    }
+
+    // Initial Load
+    loadTickets();
+    loadTasks();
+
+    // Initialize
+    loadData();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,70 @@
+# Node.js
+server/node_modules/
+server/npm-debug.log*
+server/yarn-debug.log*
+server/yarn-error.log*
+
+# Environment
+server/.env
+server/.env.local
+server/.env.*.local
+
+# Database
+server/backups/
+*.sql
+*.dump
+
+# Debug & Test Files
+server/debug*.txt
+server/debug*.json
+server/test_output.txt
+server/*_error.txt
+server/*.log
+
+# Design Documents (keep in docs folder instead)
+server/design_*.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Flutter/Dart
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/build/
+app/pubspec.lock
+
+# Android
+app/android/.gradle/
+app/android/captures/
+app/android/local.properties
+app/android/.externalNativeBuild/
+app/android/app/debug/
+app/android/app/profile/
+app/android/app/release/
+
+# iOS
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/Flutter.framework
+app/ios/Flutter/Flutter.podspec
+app/ios/.generated/
+
+# Web
+app/web/.dart_tool/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.env

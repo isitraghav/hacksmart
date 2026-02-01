@@ -1,0 +1,49 @@
+{
+  "name": "hacksmart-server",
+  "version": "1.0.0",
+  "description": "HackSmart Battery Swapping Network - Express API Server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "migrate": "node scripts/migrate.js",
+    "db:dump": "node scripts/dbDump.js",
+    "db:load": "node scripts/dbLoad.js",
+    "db:reset": "node scripts/generateDemoData.js",
+    "db:init": "npm run migrate && npm run db:reset",
+    "test": "node tests/api.test.js",
+    "test:rebalancing": "node tests/rebalancing.test.js",
+    "test:notifications": "node tests/notifications.test.js",
+    "test:logistics": "node tests/logistics.test.js",
+    "test:agent": "node tests/agent.test.js",
+    "test:all": "npm run test && npm run test:rebalancing && npm run test:notifications && npm run test:logistics && npm run test:agent"
+  },
+  "keywords": [
+    "battery-swapping",
+    "logistics",
+    "inventory-management",
+    "ai-agent",
+    "rebalancing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.980.0",
+    "@langchain/core": "^1.1.18",
+    "@langchain/groq": "^1.0.4",
+    "@langchain/langgraph": "^1.1.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.5.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "groq-sdk": "^0.37.0",
+    "jsonwebtoken": "^9.0.3",
+    "langchain": "^1.2.16",
+    "pg": "^8.11.3",
+    "zod": "^4.3.6"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
